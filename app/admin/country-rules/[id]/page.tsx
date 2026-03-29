@@ -32,7 +32,6 @@ type FormState = {
 
   keyDocuments: string;
   commonRefusalReasons: string[];
-  commonRefusalReasons: string;
   notes: string;
   officialSourceUrl: string;
 };
