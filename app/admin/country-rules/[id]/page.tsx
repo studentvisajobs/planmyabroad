@@ -72,7 +72,7 @@ export default function EditCountryRulePage() {
     processingTimeMigration: "",
 
     keyDocuments: "",
-    commonRefusalReasons: "",
+    commonRefusalReasons: [],
     notes: "",
     officialSourceUrl: "",
   });
