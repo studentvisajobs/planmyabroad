@@ -180,7 +180,6 @@ export default function EditCountryRulePage() {
             .filter(Boolean),
 
           commonRefusalReasons: form.commonRefusalReasons
-            .split("\n")
             .map((item) => item.trim())
             .filter(Boolean),
 
