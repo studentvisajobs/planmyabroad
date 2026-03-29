@@ -30,11 +30,11 @@ export type PathwayResult = {
 type BestRoute = "study" | "work" | "migration" | null;
 
 function hasStrongEducation(level: EducationLevel) {
-  return [
-    EducationLevel.BACHELORS,
-    EducationLevel.MASTERS,
-    EducationLevel.PHD,
-  ].includes(level);
+  return (
+    level === EducationLevel.BACHELORS ||
+    level === EducationLevel.MASTERS ||
+    level === EducationLevel.PHD
+  );
 }
 
 function getDocumentCount(profile: UserProfile) {
