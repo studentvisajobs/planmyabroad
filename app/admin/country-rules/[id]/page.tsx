@@ -400,12 +400,17 @@ export default function EditCountryRulePage() {
 
             <TextareaField
               label="Common Refusal Reasons (one per line)"
-              value={form.commonRefusalReasons}
+              value={form.commonRefusalReasons.join("\n")}
               onChange={(value) =>
-                setForm({ ...form, commonRefusalReasons: value })
+                setForm({
+                  ...form,
+                  commonRefusalReasons: value
+                    .split("\n")
+                    .map((item) => item.trim())
+                    .filter(Boolean),
+                })
               }
             />
-
             <TextareaField
               label="Notes"
               value={form.notes}
