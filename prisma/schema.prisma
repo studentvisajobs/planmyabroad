@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+}
+
+enum EnglishTestType {
+  IELTS
+  TOEFL
+  PTE
+  NONE
+}
+
+enum StudyIntent {
+  UNDERGRADUATE
+  POSTGRADUATE
+  NONE
+}
+
+enum EducationLevel {
+  HIGH_SCHOOL
+  DIPLOMA
+  BACHELORS
+  MASTERS
+  PHD
+}
+
+model UserProfile {
+  id                 String          @id @default(cuid())
+  userId             String?         @unique
+  user               User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  nationality        String
+  currentCountry     String
+  age                Int
+  educationLevel     EducationLevel
+  fieldOfStudy       String?
+  gpa                Float?
+  workExperience     Int             @default(0)
+  occupation         String?
+  englishTestType    EnglishTestType @default(NONE)
+  englishScore       Float?
+  budget             Float?
+  preferredCountries String[]
+
+  maritalStatus           MaritalStatus @default(SINGLE)
+  hasPassport             Boolean       @default(false)
+  hasDegreeCertificate    Boolean       @default(false)
+  hasTranscript           Boolean       @default(false)
+  hasCv                   Boolean       @default(false)
+  hasSop                  Boolean       @default(false)
+  hasRecommendationLetter Boolean       @default(false)
+  hasEnglishTestResult    Boolean       @default(false)
+
+  studyIntent            StudyIntent @default(NONE)
+  preferredIntake        String?
+  savingsAmount          Float?
+  hasScholarshipInterest Boolean     @default(false)
+
+  hasJobOffer     Boolean @default(false)
+  jobOfferCountry String?
+  annualSalary    Float?
+
+  spouseHasEnglish   Boolean @default(false)
+  spouseEnglishScore Float?
+
+  previousVisaRefusal Boolean @default(false)
+  criminalRecord      Boolean @default(false)
+
+  relocationTimelineMonths Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  isPremium     Boolean   @default(false)
+
+  accounts      Account[]
+  sessions      Session[]
+  profile       UserProfile?
+  savedPathways SavedPathway[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model SavedPathway {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  country String
+  pathway String
+  score   Int
+
+  createdAt DateTime @default(now())
+}
+
+model CountryRule {
+  id String @id @default(cuid())
+
+  country String @unique
+
+  studyAvailable Boolean @default(false)
+  workAvailable Boolean @default(false)
+  migrationAvailable Boolean @default(false)
+
+  minAge Int?
+  maxAge Int?
+
+  requiresDegree Boolean @default(false)
+  requiresWorkExperience Boolean @default(false)
+  requiresJobOffer Boolean @default(false)
+  requiresEnglishTest Boolean @default(false)
+  requiresFundsProof Boolean @default(false)
+
+  acceptedEnglishTests String[]
+  minEnglishScore Float?
+
+  estimatedStudyCost String?
+  estimatedWorkVisaCost String?
+  estimatedMigrationCost String?
+
+  fundsProofAmount String?
+  processingTimeStudy String?
+  processingTimeWork String?
+  processingTimeMigration String?
+
+  keyDocuments String[]
+  commonRefusalReasons String[]
+  notes String?
+
+  officialSourceUrl String?
+  lastReviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
