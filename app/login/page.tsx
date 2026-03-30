@@ -1,111 +1,104 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { FormEvent, useState } from "react";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-      callbackUrl: "/dashboard",
-    });
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError("Invalid email or password");
+      if (result?.error) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      router.push("/profile");
+      router.refresh();
+    } catch {
+      setError("Failed to sign in");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    window.location.href = "/dashboard";
   }
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto flex min-h-[calc(100vh-160px)] max-w-6xl items-center px-6 py-12">
-        <div className="grid w-full gap-8 lg:grid-cols-2">
-          <div className="rounded-3xl bg-slate-900 px-8 py-10 text-white shadow-lg">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-300">
-              Welcome back
-            </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight">
-              Log in to continue your migration planning
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
-              Access your saved pathways, premium roadmap, and personalized
-              migration strategy in one place.
-            </p>
+      <div className="mx-auto max-w-2xl px-6 py-12">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h1 className="text-3xl font-bold text-slate-900">Log in</h1>
+          <p className="mt-3 text-sm text-slate-600">
+            Access your migration profile and recommendations.
+          </p>
 
-            <div className="mt-8 rounded-2xl bg-white/10 p-5">
-              <p className="text-sm font-semibold text-white">
-                After login, you can
-              </p>
-              <ul className="mt-3 space-y-2 text-sm text-slate-200">
-                <li>✔ Continue your saved pathway research</li>
-                <li>✔ Upgrade once for your premium roadmap</li>
-                <li>✔ Track your migration planning progress</li>
-              </ul>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-0 focus:border-slate-500"
+                placeholder="you@example.com"
+              />
             </div>
-          </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-slate-900">Log in</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Enter your account details to continue.
-            </p>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-0 focus:border-slate-500"
+                placeholder="Enter your password"
+              />
+            </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                />
+            {error && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
               </div>
+            )}
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loading ? "Logging in..." : "Log in"}
+            </button>
+          </form>
 
-              {error ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
-              >
-                {loading ? "Logging in..." : "Log in"}
-              </button>
-            </form>
-          </div>
+          <p className="mt-6 text-sm text-slate-600">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="font-semibold text-slate-900">
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </main>

@@ -1,18 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { FormEvent, useState } from "react";
 
-export default function SignupPage() {
+export default function RegisterPage() {
   const router = useRouter();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -23,20 +26,36 @@ export default function SignupPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Signup failed");
-        setLoading(false);
+        setError(data?.error || "Failed to register user");
         return;
       }
 
-      router.push("/login");
+      const loginResult = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (loginResult?.error) {
+        setError("Account created, but automatic login failed. Please log in.");
+        router.push("/login");
+        return;
+      }
+
+      router.push("/profile");
+      router.refresh();
     } catch {
-      setError("Something went wrong");
+      setError("Failed to register user");
     } finally {
       setLoading(false);
     }
@@ -44,93 +63,79 @@ export default function SignupPage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto flex min-h-[calc(100vh-160px)] max-w-6xl items-center px-6 py-12">
-        <div className="grid w-full gap-8 lg:grid-cols-2">
-          <div className="rounded-3xl bg-slate-900 px-8 py-10 text-white shadow-lg">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-300">
-              Create your account
-            </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight">
-              Start planning your migration with more clarity
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
-              Build your profile, compare countries, save pathways, and unlock
-              a premium relocation roadmap when you are ready.
-            </p>
+      <div className="mx-auto max-w-2xl px-6 py-12">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h1 className="text-3xl font-bold text-slate-900">Sign up</h1>
+          <p className="mt-3 text-sm text-slate-600">
+            Create your account to get started.
+          </p>
 
-            <div className="mt-8 rounded-2xl bg-white/10 p-5">
-              <p className="text-sm font-semibold text-white">
-                With your account, you can
-              </p>
-              <ul className="mt-3 space-y-2 text-sm text-slate-200">
-                <li>✔ Save pathways for later review</li>
-                <li>✔ Track your premium access</li>
-                <li>✔ Continue your migration planning anytime</li>
-              </ul>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Full name
+              </label>
+              <input
+                type="text"
+                required
+                minLength={2}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-0 focus:border-slate-500"
+                placeholder="Adewale Omoniyi"
+              />
             </div>
-          </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-slate-900">Sign up</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Create your account to get started.
-            </p>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-0 focus:border-slate-500"
+                placeholder="you@example.com"
+              />
+            </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Full name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                />
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none ring-0 focus:border-slate-500"
+                placeholder="Minimum 6 characters"
+              />
+            </div>
+
+            {error && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
               </div>
+            )}
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loading ? "Creating account..." : "Create account"}
+            </button>
+          </form>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              {error ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
-              >
-                {loading ? "Creating account..." : "Create account"}
-              </button>
-            </form>
-          </div>
+          <p className="mt-6 text-sm text-slate-600">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-slate-900">
+              Log in
+            </Link>
+          </p>
         </div>
       </div>
     </main>
