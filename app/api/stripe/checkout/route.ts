@@ -12,14 +12,6 @@ export async function POST() {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const priceId = process.env.STRIPE_PRICE_ID;
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-
-    if (!secretKey) {
-      return NextResponse.json(
-        { error: "STRIPE_SECRET_KEY is missing" },
-        { status: 500 }
-      );
-    }
 
     if (!appUrl) {
       return NextResponse.json(
@@ -44,7 +36,7 @@ export async function POST() {
         },
       ],
       success_url: `${appUrl}/dashboard?upgraded=true`,
-      cancel_url: `${appUrl}/premium/cancel`,
+      cancel_url: `${appUrl}/premium`,
       customer_email: session.user.email,
       metadata: {
         userId: session.user.id,
