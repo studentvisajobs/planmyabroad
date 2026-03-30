@@ -163,12 +163,12 @@ export default function ProfilePage() {
         const res = await fetch("/api/profile");
         const data = await res.json();
 
-        if (!res.ok || !data.profile) {
+        if (!res.ok) {
           setLoadingProfile(false);
           return;
         }
 
-        const p = data.profile;
+        const p = data;
 
         setForm({
           nationality: p.nationality || "",
@@ -223,7 +223,7 @@ export default function ProfilePage() {
       const payload = {
         nationality: form.nationality,
         currentCountry: form.currentCountry,
-        age: Number(form.age),
+        age: form.age ? Number(form.age) : null,
         educationLevel: form.educationLevel,
         fieldOfStudy: form.fieldOfStudy || null,
         gpa: form.gpa ? Number(form.gpa) : null,
@@ -278,6 +278,7 @@ export default function ProfilePage() {
       }
 
       setMessage("Profile saved successfully.");
+      window.location.href = "/recommend";
     } catch (error) {
       console.error(error);
       setMessage("Something went wrong while saving profile.");
