@@ -17,20 +17,16 @@ export async function GET() {
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: {
+        id: true,
         isPremium: true,
       },
     });
 
-    const profile = await db.userProfile.findFirst({
-      where: {
-        userId: session.user.id,
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
+    const profile = await db.userProfile.findUnique({
+      where: { userId: session.user.id },
     });
 
-    if (!profile) {
+    if (!user || !profile) {
       return NextResponse.json(
         { error: "No profile found" },
         { status: 404 }
@@ -61,10 +57,10 @@ export async function GET() {
 
     return NextResponse.json({
       pathways,
-      isPremium: !!user?.isPremium,
+      isPremium: user.isPremium,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Pathways route error:", error);
     return NextResponse.json(
       { error: "Failed to generate pathways" },
       { status: 500 }

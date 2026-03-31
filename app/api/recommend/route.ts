@@ -3,22 +3,11 @@ import { auth } from "@/auth";
 import { db } from "@/lib/prisma";
 import { generateRecommendations } from "@/lib/recommendation-engine";
 
-type RecommendItem = {
-  country: string;
-  score: number;
-  eligible: boolean;
-  bestRoute: "study" | "work" | "migration" | null;
-  secondRoute: "study" | "work" | "migration" | null;
-  reasons: string[];
-  strengths: string[];
-  weaknesses: string[];
-};
-
 type RecommendSuccessResponse = {
   ok: true;
   data: {
-    topCountry: RecommendItem | null;
-    rankings: RecommendItem[];
+    topCountry: any;
+    rankings: any[];
     summary: string;
     premiumLocked: boolean;
     profileComplete: boolean;
@@ -42,7 +31,7 @@ export async function GET() {
   try {
     const session = await auth();
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json<RecommendErrorResponse>(
         {
           ok: false,
@@ -56,11 +45,18 @@ export async function GET() {
     }
 
     const user = await db.user.findUnique({
-      where: { email: session.user.email },
-      include: { profile: true },
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        isPremium: true,
+      },
     });
 
-    if (!user?.profile) {
+    const profile = await db.userProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+
+    if (!user || !profile) {
       return NextResponse.json<RecommendErrorResponse>(
         {
           ok: false,
@@ -90,56 +86,34 @@ export async function GET() {
       );
     }
 
-    const recommendations = generateRecommendations(user.profile, countryRules);
-    const isPremium = user.isPremium;
+    const recommendations = generateRecommendations(profile, countryRules);
 
-    if (!isPremium) {
-      return NextResponse.json<RecommendSuccessResponse>({
+    return NextResponse.json<RecommendSuccessResponse>(
+      {
         ok: true,
         data: {
-          topCountry: recommendations.topCountry
-            ? {
-                ...recommendations.topCountry,
-                reasons: recommendations.topCountry.reasons.slice(0, 2),
-                strengths: recommendations.topCountry.strengths.slice(0, 2),
-                weaknesses: recommendations.topCountry.weaknesses.slice(0, 2),
-              }
-            : null,
-          rankings: recommendations.rankings.slice(0, 3).map((item) => ({
-            ...item,
-            reasons: item.reasons.slice(0, 2),
-            strengths: item.strengths.slice(0, 2),
-            weaknesses: item.weaknesses.slice(0, 2),
-          })),
+          topCountry: recommendations.topCountry,
+          rankings: user.isPremium
+            ? recommendations.rankings
+            : recommendations.rankings.slice(0, 3).map((item) => ({
+                ...item,
+                reasons: item.reasons.slice(0, 2),
+                strengths: item.strengths.slice(0, 2),
+                weaknesses: item.weaknesses.slice(0, 2),
+              })),
           summary: recommendations.summary,
-          premiumLocked: true,
+          premiumLocked: !user.isPremium,
           profileComplete: true,
           premiumBenefits: [
-            "Full country ranking",
-            "Deeper reasons and weaknesses",
-            "Clearer decision confidence",
-            "Roadmap access for your top option",
+            "Full country rankings",
+            "Deeper route reasoning",
+            "Personalized roadmap access",
+            "Better migration decision support",
           ],
         },
-      });
-    }
-
-    return NextResponse.json<RecommendSuccessResponse>({
-      ok: true,
-      data: {
-        topCountry: recommendations.topCountry,
-        rankings: recommendations.rankings,
-        summary: recommendations.summary,
-        premiumLocked: false,
-        profileComplete: true,
-        premiumBenefits: [
-          "Full ranked country list",
-          "Best route clarity",
-          "Step-by-step roadmap access",
-          "Deeper migration decision guidance",
-        ],
       },
-    });
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Recommend route error:", error);
 
