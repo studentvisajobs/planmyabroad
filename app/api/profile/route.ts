@@ -6,26 +6,32 @@ export async function GET() {
   try {
     const session = await auth();
 
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const user = await db.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const profile = await db.userProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
     });
 
     if (!profile) {
-      return NextResponse.json(
-        { error: "Profile not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
     return NextResponse.json(profile);
-  } catch (error) {
+  } catch (error: any) {
     console.error("GET /api/profile error:", error);
     return NextResponse.json(
-      { error: "Failed to load profile" },
+      { error: error?.message || "Failed to load profile" },
       { status: 500 }
     );
   }
@@ -35,14 +41,23 @@ export async function POST(req: Request) {
   try {
     const session = await auth();
 
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await db.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await req.json();
 
     const profile = await db.userProfile.upsert({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       update: {
         nationality: body.nationality,
         currentCountry: body.currentCountry,
@@ -55,7 +70,6 @@ export async function POST(req: Request) {
         englishTestType: body.englishTestType,
         englishScore: body.englishScore,
         budget: body.budget,
-        savingsAmount: body.savingsAmount,
         preferredCountries: body.preferredCountries ?? [],
         maritalStatus: body.maritalStatus,
         hasPassport: body.hasPassport ?? false,
@@ -67,6 +81,7 @@ export async function POST(req: Request) {
         hasEnglishTestResult: body.hasEnglishTestResult ?? false,
         studyIntent: body.studyIntent,
         preferredIntake: body.preferredIntake,
+        savingsAmount: body.savingsAmount,
         hasScholarshipInterest: body.hasScholarshipInterest ?? false,
         hasJobOffer: body.hasJobOffer ?? false,
         jobOfferCountry: body.jobOfferCountry,
@@ -78,7 +93,7 @@ export async function POST(req: Request) {
         relocationTimelineMonths: body.relocationTimelineMonths,
       },
       create: {
-        userId: session.user.id,
+        userId: user.id,
         nationality: body.nationality,
         currentCountry: body.currentCountry,
         age: body.age,
@@ -90,7 +105,6 @@ export async function POST(req: Request) {
         englishTestType: body.englishTestType,
         englishScore: body.englishScore,
         budget: body.budget,
-        savingsAmount: body.savingsAmount,
         preferredCountries: body.preferredCountries ?? [],
         maritalStatus: body.maritalStatus,
         hasPassport: body.hasPassport ?? false,
@@ -102,6 +116,7 @@ export async function POST(req: Request) {
         hasEnglishTestResult: body.hasEnglishTestResult ?? false,
         studyIntent: body.studyIntent,
         preferredIntake: body.preferredIntake,
+        savingsAmount: body.savingsAmount,
         hasScholarshipInterest: body.hasScholarshipInterest ?? false,
         hasJobOffer: body.hasJobOffer ?? false,
         jobOfferCountry: body.jobOfferCountry,
@@ -114,10 +129,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      profile,
-    });
+    return NextResponse.json({ success: true, profile });
   } catch (error: any) {
     console.error("POST /api/profile error:", error);
     return NextResponse.json(

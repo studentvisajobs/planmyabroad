@@ -3,36 +3,12 @@ import { auth } from "@/auth";
 import { db } from "@/lib/prisma";
 import { generateRecommendations } from "@/lib/recommendation-engine";
 
-type RecommendSuccessResponse = {
-  ok: true;
-  data: {
-    topCountry: any;
-    rankings: any[];
-    summary: string;
-    premiumLocked: boolean;
-    profileComplete: boolean;
-    premiumBenefits: string[];
-  };
-};
-
-type RecommendErrorResponse = {
-  ok: false;
-  error: {
-    code:
-      | "UNAUTHORIZED"
-      | "PROFILE_MISSING"
-      | "RULES_NOT_FOUND"
-      | "RECOMMEND_FAILED";
-    message: string;
-  };
-};
-
 export async function GET() {
   try {
     const session = await auth();
 
-    if (!session?.user?.id) {
-      return NextResponse.json<RecommendErrorResponse>(
+    if (!session?.user?.email) {
+      return NextResponse.json(
         {
           ok: false,
           error: {
@@ -45,19 +21,29 @@ export async function GET() {
     }
 
     const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        isPremium: true,
-      },
+      where: { email: session.user.email },
+      select: { id: true, isPremium: true },
     });
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: {
+            code: "UNAUTHORIZED",
+            message: "User not found.",
+          },
+        },
+        { status: 401 }
+      );
+    }
 
     const profile = await db.userProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
     });
 
-    if (!user || !profile) {
-      return NextResponse.json<RecommendErrorResponse>(
+    if (!profile) {
+      return NextResponse.json(
         {
           ok: false,
           error: {
@@ -74,7 +60,7 @@ export async function GET() {
     });
 
     if (!countryRules.length) {
-      return NextResponse.json<RecommendErrorResponse>(
+      return NextResponse.json(
         {
           ok: false,
           error: {
@@ -88,36 +74,32 @@ export async function GET() {
 
     const recommendations = generateRecommendations(profile, countryRules);
 
-    return NextResponse.json<RecommendSuccessResponse>(
-      {
-        ok: true,
-        data: {
-          topCountry: recommendations.topCountry,
-          rankings: user.isPremium
-            ? recommendations.rankings
-            : recommendations.rankings.slice(0, 3).map((item) => ({
-                ...item,
-                reasons: item.reasons.slice(0, 2),
-                strengths: item.strengths.slice(0, 2),
-                weaknesses: item.weaknesses.slice(0, 2),
-              })),
-          summary: recommendations.summary,
-          premiumLocked: !user.isPremium,
-          profileComplete: true,
-          premiumBenefits: [
-            "Full country rankings",
-            "Deeper route reasoning",
-            "Personalized roadmap access",
-            "Better migration decision support",
-          ],
-        },
+    return NextResponse.json({
+      ok: true,
+      data: {
+        topCountry: recommendations.topCountry,
+        rankings: user.isPremium
+          ? recommendations.rankings
+          : recommendations.rankings.slice(0, 3).map((item) => ({
+              ...item,
+              reasons: item.reasons.slice(0, 2),
+              strengths: item.strengths.slice(0, 2),
+              weaknesses: item.weaknesses.slice(0, 2),
+            })),
+        summary: recommendations.summary,
+        premiumLocked: !user.isPremium,
+        profileComplete: true,
+        premiumBenefits: [
+          "Full country rankings",
+          "Deeper route reasoning",
+          "Personalized roadmap access",
+          "Better migration decision support",
+        ],
       },
-      { status: 200 }
-    );
+    });
   } catch (error) {
     console.error("Recommend route error:", error);
-
-    return NextResponse.json<RecommendErrorResponse>(
+    return NextResponse.json(
       {
         ok: false,
         error: {

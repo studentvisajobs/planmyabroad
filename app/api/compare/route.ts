@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   try {
     const session = await auth();
 
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json(
         {
           ok: false,
@@ -21,18 +21,28 @@ export async function GET(req: Request) {
     }
 
     const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        isPremium: true,
-      },
+      where: { email: session.user.email },
+      select: { id: true, isPremium: true },
     });
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: {
+            code: "UNAUTHORIZED",
+            message: "User not found.",
+          },
+        },
+        { status: 401 }
+      );
+    }
 
     const profile = await db.userProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
     });
 
-    if (!user || !profile) {
+    if (!profile) {
       return NextResponse.json(
         {
           ok: false,
@@ -110,14 +120,10 @@ export async function GET(req: Request) {
 
     const roadmap: string[] = [
       `Your strongest route for ${country} is ${best.route}.`,
-      second
-        ? `Your backup option is ${second.route}.`
-        : "There is no strong backup route yet.",
+      second ? `Your backup option is ${second.route}.` : "There is no strong backup route yet.",
       ...best.reasons.map((reason) => `Fix: ${reason}`),
       `Focus on the ${best.route} route first because it currently gives you the highest realistic score.`,
     ];
-
-    const reasonsPreview = best.reasons.slice(0, 2);
 
     return NextResponse.json({
       ok: true,
@@ -127,7 +133,7 @@ export async function GET(req: Request) {
         eligible: best.eligible,
         route: best.route,
         secondRoute: second?.route || null,
-        reasonsPreview,
+        reasonsPreview: best.reasons.slice(0, 2),
         fullReasons: user.isPremium ? best.reasons : null,
         roadmap: user.isPremium ? roadmap : null,
         premiumLocked: !user.isPremium,

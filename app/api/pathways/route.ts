@@ -7,30 +7,25 @@ export async function GET() {
   try {
     const session = await auth();
 
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        isPremium: true,
-      },
+      where: { email: session.user.email },
+      select: { id: true, isPremium: true },
     });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
     const profile = await db.userProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
     });
 
-    if (!user || !profile) {
-      return NextResponse.json(
-        { error: "No profile found" },
-        { status: 404 }
-      );
+    if (!profile) {
+      return NextResponse.json({ error: "No profile found" }, { status: 404 });
     }
 
     const allRules = await db.countryRule.findMany({
@@ -46,9 +41,7 @@ export async function GET() {
 
     const filteredRules =
       profile.preferredCountries.length > 0
-        ? allRules.filter((rule) =>
-            profile.preferredCountries.includes(rule.country)
-          )
+        ? allRules.filter((rule) => profile.preferredCountries.includes(rule.country))
         : allRules;
 
     const pathways = filteredRules
