@@ -34,9 +34,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         return {
           id: user.id,
-          name: user.name ?? "",
-          email: user.email ?? "",
-          isPremium: user.isPremium ?? false,
+          name: user.name,
+          email: user.email,
+          isPremium: user.isPremium,
         };
       },
     }),
@@ -48,15 +48,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     async jwt({ token, user }) {
-      // First login
+      // FIRST LOGIN
       if (user) {
         token.id = user.id;
-        token.name = user.name ?? "";
-        token.email = user.email ?? "";
-        token.isPremium = (user as any).isPremium ?? false;
       }
 
-      // Always sync with DB (important for premium updates)
+      // ALWAYS refresh from DB (critical)
       if (token.email) {
         const dbUser = await db.user.findUnique({
           where: { email: token.email as string },
@@ -64,9 +61,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (dbUser) {
           token.id = dbUser.id;
-          token.name = dbUser.name ?? "";
-          token.email = dbUser.email ?? "";
-          token.isPremium = dbUser.isPremium ?? false;
         }
       }
 
@@ -75,14 +69,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     async session({ session, token }) {
       if (session.user) {
+        // 🔥 FORCE ID INTO SESSION
         (session.user as any).id = token.id;
-        (session.user as any).isPremium = token.isPremium;
-
-        session.user.name =
-          (token.name as string | null | undefined) ?? "";
-
-        session.user.email =
-          (token.email as string | null | undefined) ?? "";
       }
 
       return session;
