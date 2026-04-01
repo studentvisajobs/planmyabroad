@@ -5,7 +5,6 @@ import RegisterPage from "./RegisterPage";
 export default async function SignupPage() {
   const session = await auth();
 
-  // If already logged in → redirect away
   if (session) {
     redirect("/profile");
   }
