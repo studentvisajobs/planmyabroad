@@ -137,17 +137,13 @@ function ScoreBar({
 }
 
 function RoadmapPanel({
-  country,
   roadmapData,
   roadmapLoading,
   roadmapError,
-  onLoadRoadmap,
 }: {
-  country: string;
   roadmapData: RoadmapData | null;
   roadmapLoading: boolean;
   roadmapError: string;
-  onLoadRoadmap: (country: string) => Promise<void>;
 }) {
   if (roadmapLoading) {
     return (
@@ -342,9 +338,7 @@ function PathwayCard({
       setRoadmapLoading(true);
       setRoadmapError("");
 
-      const res = await fetch(
-        `/api/roadmap?country=${encodeURIComponent(country)}`
-      );
+      const res = await fetch(`/api/roadmap?country=${encodeURIComponent(country)}`);
       const text = await res.text();
 
       let data: RoadmapApiResponse;
@@ -366,7 +360,6 @@ function PathwayCard({
 
       setRoadmapData(data.data);
     } catch (error: any) {
-      console.error(error);
       setRoadmapError(error.message || "Failed to load roadmap");
     } finally {
       setRoadmapLoading(false);
@@ -492,39 +485,22 @@ function PathwayCard({
             </h4>
 
             <div className="mt-4 space-y-3">
-              <ScoreBar
-                label="Education"
-                value={item.scoreBreakdown.education}
-              />
+              <ScoreBar label="Education" value={item.scoreBreakdown.education} />
               <ScoreBar
                 label="Work Experience"
                 value={item.scoreBreakdown.workExperience}
               />
-              <ScoreBar
-                label="Language"
-                value={item.scoreBreakdown.language}
-              />
-              <ScoreBar
-                label="Finances"
-                value={item.scoreBreakdown.finances}
-              />
-              <ScoreBar
-                label="Documents"
-                value={item.scoreBreakdown.documents}
-              />
-              <ScoreBar
-                label="Pathway Fit"
-                value={item.scoreBreakdown.pathwayFit}
-              />
+              <ScoreBar label="Language" value={item.scoreBreakdown.language} />
+              <ScoreBar label="Finances" value={item.scoreBreakdown.finances} />
+              <ScoreBar label="Documents" value={item.scoreBreakdown.documents} />
+              <ScoreBar label="Pathway Fit" value={item.scoreBreakdown.pathwayFit} />
             </div>
           </div>
 
           <RoadmapPanel
-            country={item.country}
             roadmapData={roadmapData}
             roadmapLoading={roadmapLoading}
             roadmapError={roadmapError}
-            onLoadRoadmap={handleLoadRoadmap}
           />
         </div>
 
@@ -563,9 +539,7 @@ function PathwayCard({
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
                     {i + 1}
                   </div>
-                  <p className="pt-1 text-sm leading-6 text-slate-700">
-                    {step}
-                  </p>
+                  <p className="pt-1 text-sm leading-6 text-slate-700">{step}</p>
                 </li>
               ))}
             </ol>
@@ -620,11 +594,13 @@ export default function PathwaysPage() {
   const [pathways, setPathways] = useState<Pathway[]>([]);
   const [isPremium, setIsPremium] = useState(false);
   const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState("");
   const [loading, setLoading] = useState(true);
 
   async function loadPathways() {
     setLoading(true);
     setError("");
+    setErrorCode("");
 
     try {
       const response = await fetch("/api/pathways");
@@ -632,15 +608,25 @@ export default function PathwaysPage() {
 
       if (!response.ok) {
         setError(data.error || "Failed to load pathways");
+
+        if (data.error === "Unauthorized") {
+          setErrorCode("UNAUTHORIZED");
+        } else if (data.error === "No profile found") {
+          setErrorCode("PROFILE_MISSING");
+        } else {
+          setErrorCode("GENERAL");
+        }
+
         setPathways([]);
         return;
       }
 
-      setPathways(data.pathways);
+      setPathways(data.pathways ?? []);
       setIsPremium(!!data.isPremium);
     } catch (error) {
       console.error(error);
       setError("Something went wrong");
+      setErrorCode("GENERAL");
     } finally {
       setLoading(false);
     }
@@ -732,7 +718,22 @@ export default function PathwaysPage() {
               We’re evaluating your strongest migration options.
             </p>
           </div>
-        ) : error ? (
+        ) : errorCode === "UNAUTHORIZED" ? (
+          <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Log in to view pathways
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              You need an account before PlanMyAbroad can generate your migration pathways.
+            </p>
+            <Link
+              href="/login"
+              className="mt-5 inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Log In
+            </Link>
+          </div>
+        ) : errorCode === "PROFILE_MISSING" ? (
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
             <h2 className="text-xl font-semibold text-slate-900">
               No profile found yet
@@ -747,6 +748,19 @@ export default function PathwaysPage() {
             >
               Create Profile
             </Link>
+          </div>
+        ) : error ? (
+          <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+            <h2 className="text-xl font-semibold text-red-900">
+              Unable to load pathways
+            </h2>
+            <p className="mt-2 text-sm text-red-700">{error}</p>
+            <button
+              onClick={loadPathways}
+              className="mt-5 inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Try Again
+            </button>
           </div>
         ) : pathways.length > 0 ? (
           <>
@@ -820,8 +834,7 @@ export default function PathwaysPage() {
               No pathway results yet
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Generate pathways to see your strongest study, work, and migration
-              options.
+              Generate pathways to see your strongest study, work, and migration options.
             </p>
           </div>
         )}
