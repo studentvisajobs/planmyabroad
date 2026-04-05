@@ -45,11 +45,12 @@ export async function POST(req: Request) {
   try {
     if (event.type === "checkout.session.completed") {
       const checkoutSession = event.data.object as Stripe.Checkout.Session;
+
       const userId = checkoutSession.metadata?.userId;
 
       if (!userId) {
         return NextResponse.json(
-          { error: "Missing userId in checkout metadata" },
+          { error: "Missing userId in metadata" },
           { status: 400 }
         );
       }
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
         data: { isPremium: true },
       });
 
-      console.log("✅ Premium upgraded for user:", userId);
+      console.log("✅ User upgraded to premium:", userId);
     }
 
     return NextResponse.json({ received: true });
