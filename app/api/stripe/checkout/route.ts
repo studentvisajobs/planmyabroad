@@ -35,12 +35,12 @@ export async function POST() {
           quantity: 1,
         },
       ],
-      success_url: `${appUrl}/dashboard?upgraded=true`,
-      cancel_url: `${appUrl}/premium`,
       customer_email: session.user.email,
       metadata: {
         userId: session.user.id,
       },
+      success_url: `${appUrl}/premium?success=true`,
+      cancel_url: `${appUrl}/premium`,
     });
 
     return NextResponse.json({ url: checkoutSession.url });
