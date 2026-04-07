@@ -91,12 +91,12 @@ function CountryCard({
   showBadge?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold">{item.country}</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Score: <strong>{item.score}%</strong>
+          <h2 className="text-xl font-bold text-slate-900">{item.country}</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Score: <strong className="text-slate-900">{item.score}%</strong>
           </p>
         </div>
 
@@ -107,26 +107,30 @@ function CountryCard({
         )}
       </div>
 
-      <p className="mt-3 text-sm">
+      <p className="mt-3 text-sm text-slate-700">
         Status:{" "}
-        <strong className={item.eligible ? "text-green-600" : "text-amber-600"}>
+        <strong className={item.eligible ? "text-green-700" : "text-amber-700"}>
           {item.eligible ? "Strong" : "Needs improvement"}
         </strong>
       </p>
 
-      <div className="mt-3 text-sm space-y-1">
+      <div className="mt-3 space-y-1 text-sm text-slate-700">
         <p>
-          Best route: <strong>{item.bestRoute || "—"}</strong>
+          Best route:{" "}
+          <strong className="text-slate-900">{item.bestRoute || "—"}</strong>
         </p>
         <p>
-          Backup route: <strong>{item.secondRoute || "—"}</strong>
+          Backup route:{" "}
+          <strong className="text-slate-900">{item.secondRoute || "—"}</strong>
         </p>
       </div>
 
       <div className="mt-4">
-        <p className="text-sm font-semibold">Strengths</p>
+        <p className="text-sm font-semibold text-slate-900">Strengths</p>
         {item.strengths.length === 0 ? (
-          <p className="mt-1 text-sm text-gray-500">No major strengths identified yet.</p>
+          <p className="mt-1 text-sm text-slate-600">
+            No major strengths identified yet.
+          </p>
         ) : (
           <ul className="mt-2 space-y-1 text-sm">
             {item.strengths.map((strength, index) => (
@@ -139,13 +143,15 @@ function CountryCard({
       </div>
 
       <div className="mt-4">
-        <p className="text-sm font-semibold">Weaknesses</p>
+        <p className="text-sm font-semibold text-slate-900">Weaknesses</p>
         {item.weaknesses.length === 0 ? (
-          <p className="mt-1 text-sm text-gray-500">No major weaknesses identified.</p>
+          <p className="mt-1 text-sm text-slate-600">
+            No major weaknesses identified.
+          </p>
         ) : (
           <ul className="mt-2 space-y-1 text-sm">
             {item.weaknesses.map((weakness, index) => (
-              <li key={index} className="text-red-600">
+              <li key={index} className="text-red-700">
                 • {weakness}
               </li>
             ))}
@@ -180,12 +186,13 @@ function DecisionBox({
   secondCountry: RecommendationItem | null;
 }) {
   return (
-    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="text-xl font-bold text-slate-900">Decision guidance</h2>
 
       <p className="mt-3 text-sm leading-6 text-slate-700">
         <strong>{topCountry.country}</strong> is currently your strongest option,
-        mainly through the <strong>{topCountry.bestRoute || "best available"}</strong> route.
+        mainly through the{" "}
+        <strong>{topCountry.bestRoute || "best available"}</strong> route.
       </p>
 
       {topCountry.strengths.length > 0 && (
@@ -203,10 +210,12 @@ function DecisionBox({
 
       {topCountry.weaknesses.length > 0 && (
         <div className="mt-4">
-          <p className="text-sm font-semibold text-slate-900">What to fix first</p>
+          <p className="text-sm font-semibold text-slate-900">
+            What to fix first
+          </p>
           <ul className="mt-2 space-y-1 text-sm">
             {topCountry.weaknesses.slice(0, 2).map((item, index) => (
-              <li key={index} className="text-red-600">
+              <li key={index} className="text-red-700">
                 • {item}
               </li>
             ))}
@@ -225,7 +234,10 @@ function DecisionBox({
               <strong>{secondCountry.score}%</strong>
             </li>
             <li>
-              • Stronger route fit through <strong>{topCountry.bestRoute || "its current best route"}</strong>
+              • Stronger route fit through{" "}
+              <strong>
+                {topCountry.bestRoute || "its current best route"}
+              </strong>
             </li>
             <li>• Better overall profile readiness right now</li>
           </ul>
@@ -250,7 +262,7 @@ function RoadmapBox({
 }) {
   if (loading) {
     return (
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm text-slate-600">Loading roadmap...</p>
       </div>
     );
@@ -266,9 +278,9 @@ function RoadmapBox({
 
   if (!roadmap) {
     return (
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-bold text-slate-900">Action plan</h2>
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-slate-700">
           {premiumLocked
             ? "Premium unlocks the full step-by-step roadmap for your top country."
             : "Open the roadmap for your top country to see what to do next."}
@@ -285,15 +297,19 @@ function RoadmapBox({
   }
 
   return (
-    <div className="rounded-2xl border bg-white p-6 shadow-sm">
-      <h2 className="text-xl font-bold text-slate-900">Action plan for {roadmap.country}</h2>
-      <p className="mt-2 text-sm text-slate-600">
-        Pathway: <strong>{roadmap.pathway}</strong>
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="text-xl font-bold text-slate-900">
+        Action plan for {roadmap.country}
+      </h2>
+      <p className="mt-2 text-sm text-slate-700">
+        Pathway: <strong className="text-slate-900">{roadmap.pathway}</strong>
       </p>
 
       {roadmap.nextBestActions.length > 0 && (
         <div className="mt-4">
-          <p className="text-sm font-semibold text-slate-900">Next best actions</p>
+          <p className="text-sm font-semibold text-slate-900">
+            Next best actions
+          </p>
           <ul className="mt-2 space-y-1 text-sm">
             {roadmap.nextBestActions.slice(0, 3).map((item, index) => (
               <li key={index} className="text-slate-700">
@@ -305,14 +321,19 @@ function RoadmapBox({
       )}
 
       <div className="mt-4">
-        <p className="text-sm font-semibold text-slate-900">First roadmap steps</p>
+        <p className="text-sm font-semibold text-slate-900">
+          First roadmap steps
+        </p>
         <div className="mt-3 space-y-3">
           {roadmap.steps.slice(0, 3).map((step, index) => (
-            <div key={index} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div
+              key={index}
+              className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+            >
               <p className="text-sm font-semibold text-slate-900">
                 {index + 1}. {step.title}
               </p>
-              <p className="mt-1 text-sm text-slate-600">{step.description}</p>
+              <p className="mt-1 text-sm text-slate-700">{step.description}</p>
             </div>
           ))}
         </div>
@@ -384,7 +405,9 @@ export default function RecommendPage() {
       setRoadmapLoading(true);
       setRoadmapError("");
 
-      const res = await fetch(`/api/roadmap?country=${encodeURIComponent(topCountry.country)}`);
+      const res = await fetch(
+        `/api/roadmap?country=${encodeURIComponent(topCountry.country)}`
+      );
       const text = await res.text();
 
       let data: RoadmapApiResponse;
@@ -433,16 +456,22 @@ export default function RecommendPage() {
             Your best country recommendations
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-            Use this page to decide where you should focus first, which route is strongest,
-            and what action to take next.
+            Use this page to decide where you should focus first, which route is
+            strongest, and what action to take next.
           </p>
         </section>
 
-        {loading && <p className="mt-8">Loading recommendations...</p>}
+        {loading && (
+          <p className="mt-8 text-sm font-medium text-slate-700">
+            Loading recommendations...
+          </p>
+        )}
 
         {!loading && errorCode === "UNAUTHORIZED" && (
-          <div className="mt-8 rounded-2xl border bg-white p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-slate-900">Log in to see recommendations</h2>
+          <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-slate-900">
+              Log in to see recommendations
+            </h2>
             <p className="mt-3 text-sm text-slate-600">
               Your recommendation page uses your saved profile and account data.
             </p>
@@ -456,10 +485,13 @@ export default function RecommendPage() {
         )}
 
         {!loading && errorCode === "PROFILE_MISSING" && (
-          <div className="mt-8 rounded-2xl border bg-white p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-slate-900">Complete your profile first</h2>
+          <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-slate-900">
+              Complete your profile first
+            </h2>
             <p className="mt-3 text-sm text-slate-600">
-              We need your profile details before we can recommend the best country and route.
+              We need your profile details before we can recommend the best
+              country and route.
             </p>
             <Link
               href="/profile"
@@ -480,7 +512,9 @@ export default function RecommendPage() {
           <>
             {premiumLocked ? (
               <div className="mt-8 rounded-2xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
-                <p className="text-sm font-semibold text-yellow-900">Free Plan Active</p>
+                <p className="text-sm font-semibold text-yellow-900">
+                  Free Plan Active
+                </p>
                 <p className="mt-2 text-sm text-yellow-800">
                   Free shows what looks best. Premium gives you the action plan.
                 </p>
@@ -514,7 +548,7 @@ export default function RecommendPage() {
             )}
 
             {summary && (
-              <div className="mt-8 rounded-2xl border bg-white p-5 shadow-sm">
+              <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="text-sm font-semibold text-slate-500">Summary</p>
                 <p className="mt-2 text-base text-slate-800">{summary}</p>
               </div>
@@ -524,7 +558,9 @@ export default function RecommendPage() {
               <>
                 <section className="mt-10">
                   <div className="mb-4 flex items-center justify-between gap-4">
-                    <h2 className="text-2xl font-bold text-slate-900">Top recommendation</h2>
+                    <h2 className="text-2xl font-bold text-slate-900">
+                      Top recommendation
+                    </h2>
 
                     <Link
                       href="/pathways"
@@ -556,7 +592,9 @@ export default function RecommendPage() {
 
             <section className="mt-10">
               <div className="mb-4 flex items-center justify-between gap-4">
-                <h2 className="text-2xl font-bold text-slate-900">Ranked countries</h2>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Ranked countries
+                </h2>
 
                 {premiumLocked ? (
                   <div className="rounded-full bg-yellow-100 px-4 py-2 text-sm font-medium text-yellow-800">
@@ -570,7 +608,7 @@ export default function RecommendPage() {
               </div>
 
               {rankings.length === 0 ? (
-                <div className="rounded-2xl border bg-white p-5 shadow-sm">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <p className="text-slate-600">No recommendations available yet.</p>
                 </div>
               ) : (

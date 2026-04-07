@@ -10,12 +10,19 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    const priceId = process.env.STRIPE_PRICE_ID;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+    const priceId = process.env.STRIPE_PRICE_ID?.trim();
 
     if (!appUrl) {
       return NextResponse.json(
         { error: "NEXT_PUBLIC_APP_URL is missing" },
+        { status: 500 }
+      );
+    }
+
+    if (!appUrl.startsWith("http://") && !appUrl.startsWith("https://")) {
+      return NextResponse.json(
+        { error: `Invalid NEXT_PUBLIC_APP_URL: ${appUrl}` },
         { status: 500 }
       );
     }
